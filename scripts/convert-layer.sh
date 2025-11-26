@@ -76,8 +76,8 @@ if [ "$DATASOURCE_TYPE" = "wfs" ]; then
 
   echo "Using sortBy=$SORT_BY"
 
-  # Pagination settings (1M = single request for most layers)
-  PAGE_SIZE=1000000
+  # Pagination settings (100k per request to avoid timeouts)
+  PAGE_SIZE=100000
   START_INDEX=0
   TOTAL_FEATURES=0
   PAGE_NUM=1
@@ -99,7 +99,7 @@ if [ "$DATASOURCE_TYPE" = "wfs" ]; then
 
     echo -n "  Page $PAGE_NUM (startIndex=$START_INDEX)... "
 
-    if ! curl -sL --max-time 120 -o "$PAGE_FILE" "$REQUEST_URL"; then
+    if ! curl -sL --max-time 600 -o "$PAGE_FILE" "$REQUEST_URL"; then
       echo "FAILED"
       echo "Error: Failed to fetch page $PAGE_NUM from WFS"
       exit 1
@@ -207,8 +207,58 @@ PARQUET_FILE="$OUTPUT_DIR/${LAYER_SAFE_NAME}.parquet"
 echo "Step 3: Converting to GeoParquet..."
 ogr2ogr -f Parquet "$PARQUET_FILE" "$GEOJSON_FILE"
 
+# Step 4: Fetch and convert SLD style to Mapbox GL JSON
+STYLE_FILE="$OUTPUT_DIR/${LAYER_SAFE_NAME}.json"
+SLD_FILE="$TEMP_DIR/${LAYER_SAFE_NAME}.sld"
+STYLE_TEMP="$TEMP_DIR/${LAYER_SAFE_NAME}_style_temp.json"
+echo "Step 4: Fetching SLD style..."
+
+WMS_URL="${WFS_URL/wfs/wms}"
+curl -sL "${WMS_URL}?service=WMS&version=1.1.1&request=GetStyles&layers=${LAYER_FULL_NAME}" -o "$SLD_FILE"
+
+if grep -q "StyledLayerDescriptor" "$SLD_FILE"; then
+  echo "Converting SLD to Mapbox GL style using geostyler-cli..."
+  if npx geostyler-cli -s sld -t mapbox -o "$STYLE_TEMP" "$SLD_FILE" 2>/dev/null; then
+    # Add source and source-layer to each layer in the output
+    jq --arg src "$LAYER_SAFE_NAME" '.layers = [.layers[] | . + {source: $src, "source-layer": $src}]' "$STYLE_TEMP" > "$STYLE_FILE"
+    rm -f "$STYLE_TEMP"
+    echo "  Saved: $STYLE_FILE"
+  else
+    echo "  Warning: geostyler-cli failed, creating default style"
+    cat > "$STYLE_FILE" << DEFAULTSTYLE
+[{
+  "id": "${LAYER_SAFE_NAME}",
+  "source": "${LAYER_SAFE_NAME}",
+  "source-layer": "${LAYER_SAFE_NAME}",
+  "type": "fill",
+  "paint": {
+    "fill-color": "#088",
+    "fill-opacity": 0.6,
+    "fill-outline-color": "#000"
+  }
+}]
+DEFAULTSTYLE
+  fi
+else
+  echo "  Warning: No SLD found, creating default style"
+  cat > "$STYLE_FILE" << DEFAULTSTYLE
+[{
+  "id": "${LAYER_SAFE_NAME}",
+  "source": "${LAYER_SAFE_NAME}",
+  "source-layer": "${LAYER_SAFE_NAME}",
+  "type": "fill",
+  "paint": {
+    "fill-color": "#088",
+    "fill-opacity": 0.6,
+    "fill-outline-color": "#000"
+  }
+}]
+DEFAULTSTYLE
+fi
+rm -f "$SLD_FILE"
+
 # Cleanup temp files
-echo "Step 4: Cleaning up..."
+echo "Step 5: Cleaning up..."
 rm "$GEOJSON_FILE"
 
 # Get file sizes
@@ -218,3 +268,4 @@ PARQUET_SIZE=$(du -h "$PARQUET_FILE" | cut -f1)
 echo "=== Conversion complete ==="
 echo "PMTiles: $PMTILES_FILE ($PMTILES_SIZE)"
 echo "Parquet: $PARQUET_FILE ($PARQUET_SIZE)"
+echo "Style:   $STYLE_FILE"
