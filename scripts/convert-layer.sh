@@ -202,13 +202,19 @@ tippecanoe -o "$PMTILES_FILE" \
   --force \
   "$GEOJSON_FILE"
 
+# Step 3: Convert to GeoParquet
+PARQUET_FILE="$OUTPUT_DIR/${LAYER_SAFE_NAME}.parquet"
+echo "Step 3: Converting to GeoParquet..."
+ogr2ogr -f Parquet "$PARQUET_FILE" "$GEOJSON_FILE"
+
 # Cleanup temp files
-echo "Step 3: Cleaning up..."
+echo "Step 4: Cleaning up..."
 rm "$GEOJSON_FILE"
 
-# Get file size
-FILE_SIZE=$(du -h "$PMTILES_FILE" | cut -f1)
+# Get file sizes
+PMTILES_SIZE=$(du -h "$PMTILES_FILE" | cut -f1)
+PARQUET_SIZE=$(du -h "$PARQUET_FILE" | cut -f1)
 
 echo "=== Conversion complete ==="
-echo "Output: $PMTILES_FILE"
-echo "Size: $FILE_SIZE"
+echo "PMTiles: $PMTILES_FILE ($PMTILES_SIZE)"
+echo "Parquet: $PARQUET_FILE ($PARQUET_SIZE)"
