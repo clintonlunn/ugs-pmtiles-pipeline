@@ -1,0 +1,15 @@
+{
+  "type": "wfs",
+  "wfs": {
+    "url": "https://ugs-geoserver-prod-flbcoqv7oa-uc.a.run.app/geoserver/wfs",
+    "version": "2.0.0"
+  },
+  "postgis": {
+    "host": "localhost",
+    "port": 5432,
+    "database": "ugs_gis",
+    "user": "postgres",
+    "password": "${PGPASSWORD}",
+    "enabled": false
+  }
+}

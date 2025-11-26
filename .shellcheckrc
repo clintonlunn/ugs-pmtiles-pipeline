@@ -1,0 +1,6 @@
+# ShellCheck configuration
+# https://github.com/koalaman/shellcheck
+
+# Disable specific warnings
+# SC2086: Double quote to prevent globbing and word splitting (sometimes intentional)
+disable=SC2086

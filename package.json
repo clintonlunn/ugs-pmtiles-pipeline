@@ -1,0 +1,27 @@
+{
+  "name": "ugs-pmtiles-pipeline",
+  "version": "1.0.0",
+  "description": "Convert UGS GeoServer layers to PMTiles for performant web mapping",
+  "scripts": {
+    "convert": "./scripts/convert-all.sh",
+    "convert:layer": "./scripts/convert-layer.sh",
+    "setup": "./scripts/setup-local.sh",
+    "lint": "npm run lint:shell && npm run lint:json",
+    "lint:shell": "shellcheck scripts/*.sh",
+    "lint:json": "prettier --check '**/*.json' '**/*.md'",
+    "format": "prettier --write '**/*.json' '**/*.md'",
+    "prepare": "husky install || true"
+  },
+  "devDependencies": {
+    "prettier": "^3.1.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.1.0"
+  },
+  "lint-staged": {
+    "*.sh": "shellcheck",
+    "*.{json,md}": "prettier --write"
+  },
+  "keywords": ["pmtiles", "geoserver", "maplibre", "vector-tiles"],
+  "author": "UGS",
+  "license": "MIT"
+}
