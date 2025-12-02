@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
-# Usage: ./scripts/convert-layer.sh hazards:quaternaryfaults_current
+# Usage: ./scripts/convert-layer.sh <layer_name>
+# layer_name: The 'name' field from config/layers.json (e.g., quaternaryfaults_current, seamlessgeolunits_500k)
 
 LAYER_FULL_NAME=$1
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -12,7 +13,8 @@ TEMP_DIR="$PROJECT_ROOT/temp"
 
 if [ -z "$LAYER_FULL_NAME" ]; then
   echo "Usage: $0 <layer_name>"
-  echo "Example: $0 hazards:quaternaryfaults_current"
+  echo "Example: $0 quaternaryfaults_current"
+  echo "Example: $0 seamlessgeolunits_500k"
   exit 1
 fi
 
@@ -25,14 +27,16 @@ DATASOURCE_TYPE=$(jq -r '.type' "$CONFIG_DIR/datasource.json")
 echo "=== Converting layer: $LAYER_FULL_NAME ==="
 echo "Data source: $DATASOURCE_TYPE"
 
-# Extract layer name for filenames
+# Extract layer name for filenames (can be overridden by outputName in config)
 LAYER_SAFE_NAME=$(echo "$LAYER_FULL_NAME" | tr ':' '_')
-GEOJSON_FILE="$TEMP_DIR/${LAYER_SAFE_NAME}.geojson"
-PMTILES_FILE="$OUTPUT_DIR/${LAYER_SAFE_NAME}.pmtiles"
 
 # Get layer config for zoom levels and source CRS
-LAYER_CONFIG=$(jq -r ".layers[] | select(.fullName == \"$LAYER_FULL_NAME\")" "$CONFIG_DIR/layers.json")
-if [ -z "$LAYER_CONFIG" ]; then
+# First try to match by name, then fall back to fullName
+LAYER_CONFIG=$(jq -r ".layers[] | select(.name == \"$LAYER_FULL_NAME\")" "$CONFIG_DIR/layers.json")
+if [ -z "$LAYER_CONFIG" ] || [ "$LAYER_CONFIG" = "null" ]; then
+  LAYER_CONFIG=$(jq -r ".layers[] | select(.fullName == \"$LAYER_FULL_NAME\")" "$CONFIG_DIR/layers.json")
+fi
+if [ -z "$LAYER_CONFIG" ] || [ "$LAYER_CONFIG" = "null" ]; then
   echo "Warning: Layer not found in config, using defaults"
   MIN_ZOOM=5
   MAX_ZOOM=14
@@ -42,10 +46,31 @@ else
   MAX_ZOOM=$(echo "$LAYER_CONFIG" | jq -r '.maxZoom // 14')
   # Get source CRS from config, default to EPSG:26912 if not specified
   SOURCE_CRS=$(echo "$LAYER_CONFIG" | jq -r '.sourceCrs // "EPSG:26912"')
+  # Get optional CQL filter for subsetting data
+  CQL_FILTER=$(echo "$LAYER_CONFIG" | jq -r '.cqlFilter // empty')
+  # Get optional output name override (for filtered subsets)
+  OUTPUT_NAME=$(echo "$LAYER_CONFIG" | jq -r '.outputName // empty')
+  # Get fullName from config (needed when looking up by name)
+  CONFIG_FULL_NAME=$(echo "$LAYER_CONFIG" | jq -r '.fullName // empty')
+  if [ -n "$CONFIG_FULL_NAME" ]; then
+    LAYER_FULL_NAME="$CONFIG_FULL_NAME"
+  fi
 fi
 
 echo "Zoom range: $MIN_ZOOM - $MAX_ZOOM"
 echo "Source CRS: $SOURCE_CRS"
+if [ -n "$CQL_FILTER" ]; then
+  echo "CQL Filter: $CQL_FILTER"
+fi
+
+# Use output name override if provided (for filtered subsets like 500k)
+if [ -n "$OUTPUT_NAME" ]; then
+  LAYER_SAFE_NAME="$OUTPUT_NAME"
+  echo "Output name: $LAYER_SAFE_NAME"
+fi
+
+GEOJSON_FILE="$TEMP_DIR/${LAYER_SAFE_NAME}.geojson"
+PMTILES_FILE="$OUTPUT_DIR/${LAYER_SAFE_NAME}.pmtiles"
 
 # Step 1: Export to GeoJSON (data source abstraction)
 echo "Step 1: Exporting to GeoJSON..."
@@ -100,6 +125,11 @@ if [ "$DATASOURCE_TYPE" = "wfs" ]; then
   while true; do
     PAGE_FILE="$FEATURES_DIR/page_${PAGE_NUM}.json"
     REQUEST_URL="${WFS_URL}?service=WFS&version=2.0.0&request=GetFeature&typeNames=${LAYER_FULL_NAME}&outputFormat=application/json&count=${PAGE_SIZE}&startIndex=${START_INDEX}&sortBy=${SORT_BY}"
+
+    # Append CQL filter if specified
+    if [ -n "$CQL_FILTER" ]; then
+      REQUEST_URL="${REQUEST_URL}&CQL_FILTER=${CQL_FILTER}"
+    fi
 
     echo -n "  Page $PAGE_NUM (startIndex=$START_INDEX)... "
 
@@ -186,9 +216,15 @@ elif [ "$DATASOURCE_TYPE" = "postgis" ]; then
   PG_USER=$(jq -r '.postgis.user' "$CONFIG_DIR/datasource.json")
   PG_TABLE=$(echo "$LAYER_CONFIG" | jq -r '.postgisTable')
 
+  # Build SQL query with optional filter (CQL syntax works for simple filters)
+  SQL_QUERY="SELECT * FROM $PG_TABLE"
+  if [ -n "$CQL_FILTER" ]; then
+    SQL_QUERY="$SQL_QUERY WHERE $CQL_FILTER"
+  fi
+
   ogr2ogr -f GeoJSON "$GEOJSON_FILE" \
     PG:"host=$PG_HOST port=$PG_PORT dbname=$PG_DB user=$PG_USER" \
-    -sql "SELECT * FROM $PG_TABLE" \
+    -sql "$SQL_QUERY" \
     -progress
 else
   echo "Error: Unknown datasource type: $DATASOURCE_TYPE"

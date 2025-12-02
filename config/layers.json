@@ -2,7 +2,6 @@
   "layers": [
     {
       "name": "seamlessgeolunits",
-      "workspace": "mapping",
       "fullName": "mapping:seamlessgeolunits",
       "postgisTable": "mapping.seamlessgeolunits",
       "minZoom": 5,
@@ -11,8 +10,18 @@
       "sourceCrs": "EPSG:3857"
     },
     {
+      "name": "seamlessgeolunits_500k",
+      "fullName": "mapping:seamlessgeolunits",
+      "postgisTable": "mapping.seamlessgeolunits",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:3857",
+      "cqlFilter": "scale='small'",
+      "outputName": "mapping_seamlessgeolunits_500k"
+    },
+    {
       "name": "alluvialfan_current",
-      "workspace": "hazards",
       "fullName": "hazards:alluvialfan_current",
       "postgisTable": "hazards.alluvialfan_current",
       "minZoom": 5,
@@ -21,7 +30,6 @@
     },
     {
       "name": "collapsiblesoil_current",
-      "workspace": "hazards",
       "fullName": "hazards:collapsiblesoil_current",
       "postgisTable": "hazards.collapsiblesoil_current",
       "minZoom": 5,
@@ -30,7 +38,6 @@
     },
     {
       "name": "corrosivesoilrock_current",
-      "workspace": "hazards",
       "fullName": "hazards:corrosivesoilrock_current",
       "postgisTable": "hazards.corrosivesoilrock_current",
       "minZoom": 5,
@@ -39,7 +46,6 @@
     },
     {
       "name": "earthfissure_current",
-      "workspace": "hazards",
       "fullName": "hazards:earthfissure_current",
       "postgisTable": "hazards.earthfissure_current",
       "minZoom": 5,
@@ -48,7 +54,6 @@
     },
     {
       "name": "erosionhazardzone_current",
-      "workspace": "hazards",
       "fullName": "hazards:erosionhazardzone_current",
       "postgisTable": "hazards.erosionhazardzone_current",
       "minZoom": 5,
@@ -57,7 +62,6 @@
     },
     {
       "name": "expansivesoilrock_current",
-      "workspace": "hazards",
       "fullName": "hazards:expansivesoilrock_current",
       "postgisTable": "hazards.expansivesoilrock_current",
       "minZoom": 5,
@@ -66,7 +70,6 @@
     },
     {
       "name": "floodanddebrisflow_current",
-      "workspace": "hazards",
       "fullName": "hazards:floodanddebrisflow_current",
       "postgisTable": "hazards.floodanddebrisflow_current",
       "minZoom": 5,
@@ -75,7 +78,6 @@
     },
     {
       "name": "groundshaking_current",
-      "workspace": "hazards",
       "fullName": "hazards:groundshaking_current",
       "postgisTable": "hazards.groundshaking_current",
       "minZoom": 5,
@@ -84,7 +86,6 @@
     },
     {
       "name": "karstfeatures_current",
-      "workspace": "hazards",
       "fullName": "hazards:karstfeatures_current",
       "postgisTable": "hazards.karstfeatures_current",
       "minZoom": 5,
@@ -93,7 +94,6 @@
     },
     {
       "name": "landslideinventory_current",
-      "workspace": "hazards",
       "fullName": "hazards:landslideinventory_current",
       "postgisTable": "hazards.landslideinventory_current",
       "minZoom": 5,
@@ -102,7 +102,6 @@
     },
     {
       "name": "landslidelegacy_current",
-      "workspace": "hazards",
       "fullName": "hazards:landslidelegacy_current",
       "postgisTable": "hazards.landslidelegacy_current",
       "minZoom": 5,
@@ -111,7 +110,6 @@
     },
     {
       "name": "landslidesusceptibility_current",
-      "workspace": "hazards",
       "fullName": "hazards:landslidesusceptibility_current",
       "postgisTable": "hazards.landslidesusceptibility_current",
       "minZoom": 5,
@@ -120,7 +118,6 @@
     },
     {
       "name": "liquefaction_current",
-      "workspace": "hazards",
       "fullName": "hazards:liquefaction_current",
       "postgisTable": "hazards.liquefaction_current",
       "minZoom": 5,
@@ -129,7 +126,6 @@
     },
     {
       "name": "pipinganderosion_current",
-      "workspace": "hazards",
       "fullName": "hazards:pipinganderosion_current",
       "postgisTable": "hazards.pipinganderosion_current",
       "minZoom": 5,
@@ -138,7 +134,6 @@
     },
     {
       "name": "quaternaryfaults_current",
-      "workspace": "hazards",
       "fullName": "hazards:quaternaryfaults_current",
       "postgisTable": "hazards.quaternaryfaults_current",
       "minZoom": 5,
@@ -147,7 +142,6 @@
     },
     {
       "name": "radonsusceptibility_current",
-      "workspace": "hazards",
       "fullName": "hazards:radonsusceptibility_current",
       "postgisTable": "hazards.radonsusceptibility_current",
       "minZoom": 5,
@@ -156,7 +150,6 @@
     },
     {
       "name": "rockfall_current",
-      "workspace": "hazards",
       "fullName": "hazards:rockfall_current",
       "postgisTable": "hazards.rockfall_current",
       "minZoom": 5,
@@ -165,7 +158,6 @@
     },
     {
       "name": "rubidium_strontium_current",
-      "workspace": "hazards",
       "fullName": "hazards:rubidium_strontium_current",
       "postgisTable": "hazards.rubidium_strontium_current",
       "minZoom": 5,
@@ -174,7 +166,6 @@
     },
     {
       "name": "salttectonicsdeformation_current",
-      "workspace": "hazards",
       "fullName": "hazards:salttectonicsdeformation_current",
       "postgisTable": "hazards.salttectonicsdeformation_current",
       "minZoom": 5,
@@ -183,7 +174,6 @@
     },
     {
       "name": "shallowbedrock_current",
-      "workspace": "hazards",
       "fullName": "hazards:shallowbedrock_current",
       "postgisTable": "hazards.shallowbedrock_current",
       "minZoom": 5,
@@ -192,7 +182,6 @@
     },
     {
       "name": "shallowgroundwater_current",
-      "workspace": "hazards",
       "fullName": "hazards:shallowgroundwater_current",
       "postgisTable": "hazards.shallowgroundwater_current",
       "minZoom": 5,
@@ -201,7 +190,6 @@
     },
     {
       "name": "solublesoilandrock_current",
-      "workspace": "hazards",
       "fullName": "hazards:solublesoilandrock_current",
       "postgisTable": "hazards.solublesoilandrock_current",
       "minZoom": 5,
@@ -210,7 +198,6 @@
     },
     {
       "name": "studyareas_current",
-      "workspace": "hazards",
       "fullName": "hazards:studyareas_current",
       "postgisTable": "hazards.studyareas_current",
       "minZoom": 5,
@@ -219,7 +206,6 @@
     },
     {
       "name": "surfacefaultrupture_current",
-      "workspace": "hazards",
       "fullName": "hazards:surfacefaultrupture_current",
       "postgisTable": "hazards.surfacefaultrupture_current",
       "minZoom": 5,
@@ -228,7 +214,6 @@
     },
     {
       "name": "windblownsand_current",
-      "workspace": "hazards",
       "fullName": "hazards:windblownsand_current",
       "postgisTable": "hazards.windblownsand_current",
       "minZoom": 5,
@@ -237,7 +222,6 @@
     },
     {
       "name": "mart_geophysics_heatflowedwards_source_current",
-      "workspace": "energy_mineral",
       "fullName": "energy_mineral:mart_geophysics_heatflowedwards_source_current",
       "postgisTable": "energy_mineral.mart_geophysics_heatflowedwards_source_current",
       "minZoom": 5,
@@ -246,7 +230,6 @@
     },
     {
       "name": "mart_geothermal_qfaults_ingenious_current",
-      "workspace": "energy_mineral",
       "fullName": "energy_mineral:mart_geothermal_qfaults_ingenious_current",
       "postgisTable": "energy_mineral.mart_geothermal_qfaults_ingenious_current",
       "minZoom": 5,
@@ -255,7 +238,6 @@
     },
     {
       "name": "mart_geothermal_wellsandsprings_current",
-      "workspace": "energy_mineral",
       "fullName": "energy_mineral:mart_geothermal_wellsandsprings_current",
       "postgisTable": "energy_mineral.mart_geothermal_wellsandsprings_current",
       "minZoom": 5,
@@ -264,7 +246,6 @@
     },
     {
       "name": "wetlandsapp_wetlands_current",
-      "workspace": "wetlands",
       "fullName": "wetlands:wetlandsapp_wetlands_current",
       "postgisTable": "wetlands.wetlandsapp_wetlands_current",
       "minZoom": 5,
@@ -273,7 +254,6 @@
     },
     {
       "name": "wetlandsapp_non_riverine_current",
-      "workspace": "wetlands",
       "fullName": "wetlands:wetlandsapp_non_riverine_current",
       "postgisTable": "wetlands.wetlandsapp_non_riverine_current",
       "minZoom": 5,
@@ -282,7 +262,6 @@
     },
     {
       "name": "wetlandsapp_riparian_current",
-      "workspace": "wetlands",
       "fullName": "wetlands:wetlandsapp_riparian_current",
       "postgisTable": "wetlands.wetlandsapp_riparian_current",
       "minZoom": 5,
@@ -291,7 +270,6 @@
     },
     {
       "name": "wetlandsapp_riverine_current",
-      "workspace": "wetlands",
       "fullName": "wetlands:wetlandsapp_riverine_current",
       "postgisTable": "wetlands.wetlandsapp_riverine_current",
       "minZoom": 5,
