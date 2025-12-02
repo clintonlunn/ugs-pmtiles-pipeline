@@ -30,18 +30,22 @@ LAYER_SAFE_NAME=$(echo "$LAYER_FULL_NAME" | tr ':' '_')
 GEOJSON_FILE="$TEMP_DIR/${LAYER_SAFE_NAME}.geojson"
 PMTILES_FILE="$OUTPUT_DIR/${LAYER_SAFE_NAME}.pmtiles"
 
-# Get layer config for zoom levels
+# Get layer config for zoom levels and source CRS
 LAYER_CONFIG=$(jq -r ".layers[] | select(.fullName == \"$LAYER_FULL_NAME\")" "$CONFIG_DIR/layers.json")
 if [ -z "$LAYER_CONFIG" ]; then
   echo "Warning: Layer not found in config, using defaults"
   MIN_ZOOM=5
   MAX_ZOOM=14
+  SOURCE_CRS="EPSG:26912"
 else
   MIN_ZOOM=$(echo "$LAYER_CONFIG" | jq -r '.minZoom // 5')
   MAX_ZOOM=$(echo "$LAYER_CONFIG" | jq -r '.maxZoom // 14')
+  # Get source CRS from config, default to EPSG:26912 if not specified
+  SOURCE_CRS=$(echo "$LAYER_CONFIG" | jq -r '.sourceCrs // "EPSG:26912"')
 fi
 
 echo "Zoom range: $MIN_ZOOM - $MAX_ZOOM"
+echo "Source CRS: $SOURCE_CRS"
 
 # Step 1: Export to GeoJSON (data source abstraction)
 echo "Step 1: Exporting to GeoJSON..."
@@ -166,11 +170,11 @@ if [ "$DATASOURCE_TYPE" = "wfs" ]; then
   rm -rf "$FEATURES_DIR"
 
   # Reproject to WGS84 (EPSG:4326) for PMTiles
-  echo "Reprojecting to EPSG:4326..."
+  echo "Reprojecting from $SOURCE_CRS to EPSG:4326..."
   ogr2ogr -f GeoJSON "$GEOJSON_FILE" \
     "$TEMP_GEOJSON" \
     -t_srs EPSG:4326 \
-    -s_srs EPSG:26912
+    -s_srs "$SOURCE_CRS"
 
   rm "$TEMP_GEOJSON"
 
@@ -202,10 +206,29 @@ tippecanoe -o "$PMTILES_FILE" \
   --force \
   "$GEOJSON_FILE"
 
-# Step 3: Convert to GeoParquet
+# Step 3: Convert to GeoParquet using DuckDB
 PARQUET_FILE="$OUTPUT_DIR/${LAYER_SAFE_NAME}.parquet"
 echo "Step 3: Converting to GeoParquet..."
-ogr2ogr -f Parquet "$PARQUET_FILE" "$GEOJSON_FILE"
+
+# Use DuckDB for reliable GeoParquet conversion (ogr2ogr often lacks Parquet driver)
+DUCKDB_CMD="${DUCKDB_PATH:-$HOME/bin/duckdb}"
+if [ -x "$DUCKDB_CMD" ]; then
+  "$DUCKDB_CMD" -c "
+    INSTALL spatial;
+    LOAD spatial;
+    COPY (SELECT * FROM ST_Read('$GEOJSON_FILE'))
+    TO '$PARQUET_FILE' (FORMAT PARQUET);
+  "
+  echo "  Converted with DuckDB"
+elif command -v ogr2ogr &> /dev/null && ogr2ogr --formats | grep -q Parquet; then
+  # Fallback to ogr2ogr if it has Parquet support
+  ogr2ogr -f Parquet "$PARQUET_FILE" "$GEOJSON_FILE"
+  echo "  Converted with ogr2ogr"
+else
+  echo "  Warning: No GeoParquet converter available (need DuckDB or ogr2ogr with Parquet)"
+  echo "  Skipping GeoParquet output"
+  PARQUET_FILE=""
+fi
 
 # Step 4: Fetch and convert SLD style to Mapbox GL JSON
 STYLE_FILE="$OUTPUT_DIR/${LAYER_SAFE_NAME}.json"
@@ -217,42 +240,50 @@ WMS_URL="${WFS_URL/wfs/wms}"
 curl -sL "${WMS_URL}?service=WMS&version=1.1.1&request=GetStyles&layers=${LAYER_FULL_NAME}" -o "$SLD_FILE"
 
 if grep -q "StyledLayerDescriptor" "$SLD_FILE"; then
-  echo "Converting SLD to Mapbox GL style using geostyler-cli..."
+  echo "Converting SLD to Mapbox GL style..."
+
+  # Preprocess SLD: Remove "No Legend Provided" rules with empty Mark elements
+  # These are GeoServer vendor tricks to hide legend entries that break geostyler-cli
+  SLD_CLEANED="$TEMP_DIR/${LAYER_SAFE_NAME}_cleaned.sld"
+  sed '/<sld:Rule>/,/<\/sld:Rule>/{ /<sld:Name>No Legend Provided<\/sld:Name>/,/<\/sld:Rule>/d }' "$SLD_FILE" > "$SLD_CLEANED"
+  # Also remove rules with empty <sld:Mark/> elements
+  sed -i '/<sld:Rule>/,/<\/sld:Rule>/{ /<sld:Mark\/>/,/<\/sld:Rule>/d }' "$SLD_CLEANED"
+  mv "$SLD_CLEANED" "$SLD_FILE"
+
+  # Try geostyler-cli first
   if npx geostyler-cli -s sld -t mapbox -o "$STYLE_TEMP" "$SLD_FILE" 2>/dev/null; then
-    # Add source and source-layer to each layer in the output
-    jq --arg src "$LAYER_SAFE_NAME" '.layers = [.layers[] | . + {source: $src, "source-layer": $src}]' "$STYLE_TEMP" > "$STYLE_FILE"
+    # Add source and source-layer to each layer, and remove fill layers without fill-color
+    # (GeoStyler creates empty fill layers as part of composite symbolizers for polygon strokes)
+    jq --arg src "$LAYER_SAFE_NAME" '
+      .layers = [
+        .layers[] |
+        select(.type != "fill" or .paint["fill-color"] != null) |
+        . + {source: $src, "source-layer": $src}
+      ]
+    ' "$STYLE_TEMP" > "$STYLE_FILE"
     rm -f "$STYLE_TEMP"
-    echo "  Saved: $STYLE_FILE"
+    echo "  Converted with geostyler-cli"
+  # Fallback to custom SLD parser for complex styles
+  elif [ -f "$SCRIPT_DIR/sld-to-mapbox.js" ]; then
+    echo "  geostyler-cli failed, using fallback parser..."
+    if node "$SCRIPT_DIR/sld-to-mapbox.js" "$SLD_FILE" "$STYLE_FILE" "$LAYER_SAFE_NAME"; then
+      echo "  Converted with sld-to-mapbox.js"
+    else
+      echo "  Warning: Fallback parser also failed, creating default style"
+      cat > "$STYLE_FILE" << DEFAULTSTYLE
+{"version":8,"name":"${LAYER_SAFE_NAME}","sources":{"${LAYER_SAFE_NAME}":{"type":"vector","url":"pmtiles://${LAYER_SAFE_NAME}.pmtiles"}},"layers":[{"id":"${LAYER_SAFE_NAME}-fill","source":"${LAYER_SAFE_NAME}","source-layer":"${LAYER_SAFE_NAME}","type":"fill","paint":{"fill-color":"#088","fill-opacity":0.6}},{"id":"${LAYER_SAFE_NAME}-outline","source":"${LAYER_SAFE_NAME}","source-layer":"${LAYER_SAFE_NAME}","type":"line","paint":{"line-color":"#000","line-width":0.5}}]}
+DEFAULTSTYLE
+    fi
   else
-    echo "  Warning: geostyler-cli failed, creating default style"
+    echo "  Warning: geostyler-cli failed, no fallback available"
     cat > "$STYLE_FILE" << DEFAULTSTYLE
-[{
-  "id": "${LAYER_SAFE_NAME}",
-  "source": "${LAYER_SAFE_NAME}",
-  "source-layer": "${LAYER_SAFE_NAME}",
-  "type": "fill",
-  "paint": {
-    "fill-color": "#088",
-    "fill-opacity": 0.6,
-    "fill-outline-color": "#000"
-  }
-}]
+{"version":8,"name":"${LAYER_SAFE_NAME}","sources":{"${LAYER_SAFE_NAME}":{"type":"vector","url":"pmtiles://${LAYER_SAFE_NAME}.pmtiles"}},"layers":[{"id":"${LAYER_SAFE_NAME}-fill","source":"${LAYER_SAFE_NAME}","source-layer":"${LAYER_SAFE_NAME}","type":"fill","paint":{"fill-color":"#088","fill-opacity":0.6}},{"id":"${LAYER_SAFE_NAME}-outline","source":"${LAYER_SAFE_NAME}","source-layer":"${LAYER_SAFE_NAME}","type":"line","paint":{"line-color":"#000","line-width":0.5}}]}
 DEFAULTSTYLE
   fi
 else
   echo "  Warning: No SLD found, creating default style"
   cat > "$STYLE_FILE" << DEFAULTSTYLE
-[{
-  "id": "${LAYER_SAFE_NAME}",
-  "source": "${LAYER_SAFE_NAME}",
-  "source-layer": "${LAYER_SAFE_NAME}",
-  "type": "fill",
-  "paint": {
-    "fill-color": "#088",
-    "fill-opacity": 0.6,
-    "fill-outline-color": "#000"
-  }
-}]
+{"version":8,"name":"${LAYER_SAFE_NAME}","sources":{"${LAYER_SAFE_NAME}":{"type":"vector","url":"pmtiles://${LAYER_SAFE_NAME}.pmtiles"}},"layers":[{"id":"${LAYER_SAFE_NAME}-fill","source":"${LAYER_SAFE_NAME}","source-layer":"${LAYER_SAFE_NAME}","type":"fill","paint":{"fill-color":"#088","fill-opacity":0.6}},{"id":"${LAYER_SAFE_NAME}-outline","source":"${LAYER_SAFE_NAME}","source-layer":"${LAYER_SAFE_NAME}","type":"line","paint":{"line-color":"#000","line-width":0.5}}]}
 DEFAULTSTYLE
 fi
 rm -f "$SLD_FILE"
@@ -263,9 +294,11 @@ rm "$GEOJSON_FILE"
 
 # Get file sizes
 PMTILES_SIZE=$(du -h "$PMTILES_FILE" | cut -f1)
-PARQUET_SIZE=$(du -h "$PARQUET_FILE" | cut -f1)
 
 echo "=== Conversion complete ==="
 echo "PMTiles: $PMTILES_FILE ($PMTILES_SIZE)"
-echo "Parquet: $PARQUET_FILE ($PARQUET_SIZE)"
+if [ -n "$PARQUET_FILE" ] && [ -f "$PARQUET_FILE" ]; then
+  PARQUET_SIZE=$(du -h "$PARQUET_FILE" | cut -f1)
+  echo "Parquet: $PARQUET_FILE ($PARQUET_SIZE)"
+fi
 echo "Style:   $STYLE_FILE"

@@ -7,7 +7,8 @@
       "postgisTable": "mapping.seamlessgeolunits",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "sourceCrs": "EPSG:3857"
     },
     {
       "name": "alluvialfan_current",
