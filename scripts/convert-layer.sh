@@ -326,7 +326,13 @@ rm -f "$SLD_FILE"
 
 # Cleanup temp files
 echo "Step 5: Cleaning up..."
-rm "$GEOJSON_FILE"
+rm -f "$GEOJSON_FILE"
+rm -f "$TEMP_DIR/${LAYER_SAFE_NAME}_temp.geojson"
+rm -f "$TEMP_DIR/${LAYER_SAFE_NAME}_merged.geojson"
+rm -rf "$TEMP_DIR/${LAYER_SAFE_NAME}_pages"
+rm -f "$TEMP_DIR/${LAYER_SAFE_NAME}_style_temp.json"
+rm -f "$TEMP_DIR/${LAYER_SAFE_NAME}_cleaned.sld"
+rm -f "$TEMP_DIR/sld_temp.xml"
 
 # Get file sizes
 PMTILES_SIZE=$(du -h "$PMTILES_FILE" | cut -f1)
