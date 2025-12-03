@@ -1,0 +1,55 @@
+name: Upload PMTiles to GCS
+
+on:
+  workflow_dispatch:
+    inputs:
+      layers:
+        description: 'Layers to convert (comma-separated, e.g., "quaternaryfaults_current,liquefaction_current")'
+        required: true
+        default: 'seamlessgeolunits_500k,quaternaryfaults_current,liquefaction_current,surfacefaultrupture_current'
+
+jobs:
+  convert-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin tippecanoe
+          npm install
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCS_SA_KEY }}
+
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Convert layers
+        run: |
+          IFS=',' read -ra LAYERS <<< "${{ github.event.inputs.layers }}"
+          for layer in "${LAYERS[@]}"; do
+            echo "Converting $layer..."
+            ./scripts/convert-layer.sh "$layer"
+          done
+
+      - name: Upload to GCS
+        run: ./scripts/upload-to-gcs.sh
+
+      - name: Summary
+        run: |
+          echo "## Uploaded Files" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          for f in output/*.pmtiles; do
+            BASENAME=$(basename "$f")
+            echo "- https://storage.googleapis.com/ut-dnr-ugs-bucket-server-prod/pmtiles/$BASENAME" >> $GITHUB_STEP_SUMMARY
+          done
