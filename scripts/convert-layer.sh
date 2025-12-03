@@ -280,11 +280,11 @@ if grep -q "StyledLayerDescriptor" "$SLD_FILE"; then
 
   # Preprocess SLD: Remove "No Legend Provided" rules with empty Mark elements
   # These are GeoServer vendor tricks to hide legend entries that break geostyler-cli
-  SLD_CLEANED="$TEMP_DIR/${LAYER_SAFE_NAME}_cleaned.sld"
-  sed '/<sld:Rule>/,/<\/sld:Rule>/{ /<sld:Name>No Legend Provided<\/sld:Name>/,/<\/sld:Rule>/d }' "$SLD_FILE" > "$SLD_CLEANED"
+  # Using perl for cross-platform compatibility (Mac BSD sed has different syntax)
+  perl -0777 -pe 's/<sld:Rule>.*?<sld:Name>No Legend Provided<\/sld:Name>.*?<\/sld:Rule>//gs' "$SLD_FILE" > "$TEMP_DIR/sld_temp.xml"
   # Also remove rules with empty <sld:Mark/> elements
-  sed -i '/<sld:Rule>/,/<\/sld:Rule>/{ /<sld:Mark\/>/,/<\/sld:Rule>/d }' "$SLD_CLEANED"
-  mv "$SLD_CLEANED" "$SLD_FILE"
+  perl -0777 -pe 's/<sld:Rule>.*?<sld:Mark\/>.*?<\/sld:Rule>//gs' "$TEMP_DIR/sld_temp.xml" > "$SLD_FILE"
+  rm -f "$TEMP_DIR/sld_temp.xml"
 
   # Try geostyler-cli first
   if npx geostyler-cli -s sld -t mapbox -o "$STYLE_TEMP" "$SLD_FILE" 2>/dev/null; then
