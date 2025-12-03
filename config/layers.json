@@ -155,7 +155,7 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards", "geophysics"]
+      "apps": ["hazards", "geophysics", "carbonstorage"]
     },
     {
       "name": "radonsusceptibility_current",
@@ -309,6 +309,166 @@
       "maxZoom": 14,
       "enabled": true,
       "apps": ["wetlands"]
+    },
+    {
+      "name": "sco2_draft_13aug24",
+      "fullName": "energy_mineral:sco2_draft_13aug24",
+      "postgisTable": "energy_mineral.sco2_draft_13aug24",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:4326",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "basin_names",
+      "fullName": "energy_mineral:basin_names",
+      "postgisTable": "energy_mineral.basin_names",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:3857",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "oilgasfields",
+      "fullName": "energy_mineral:oilgasfields",
+      "postgisTable": "energy_mineral.oilgasfields",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:3857",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "pipelines",
+      "fullName": "energy_mineral:pipelines",
+      "postgisTable": "energy_mineral.pipelines",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:3857",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "ccus_co2_sources",
+      "fullName": "energy_mineral:ccus_co2_sources",
+      "postgisTable": "energy_mineral.ccus_co2_sources",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:26912",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "cores",
+      "fullName": "energy_mineral:cores",
+      "postgisTable": "energy_mineral.cores",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:26912",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "wellswithtops_hascore",
+      "fullName": "energy_mineral:wellswithtops_hascore",
+      "postgisTable": "energy_mineral.wellswithtops_hascore",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:26912",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "ccus_sitla_reports",
+      "fullName": "energy_mineral:ccus_sitla_reports",
+      "postgisTable": "energy_mineral.ccus_sitla_reports",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:26912",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "ccus_noccuszone",
+      "fullName": "energy_mineral:ccus_noccuszone",
+      "postgisTable": "energy_mineral.ccus_noccuszone",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:26912",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "ccus_majorroads",
+      "fullName": "energy_mineral:ccus_majorroads",
+      "postgisTable": "energy_mineral.ccus_majorroads",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:3857",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "ccus_railroads",
+      "fullName": "energy_mineral:ccus_railroads",
+      "postgisTable": "energy_mineral.ccus_railroads",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:26912",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "ccus_transmissionlines",
+      "fullName": "energy_mineral:ccus_transmissionlines",
+      "postgisTable": "energy_mineral.ccus_transmissionlines",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:26912",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "ccus_geothermalpowerplants",
+      "fullName": "energy_mineral:ccus_geothermalpowerplants",
+      "postgisTable": "energy_mineral.ccus_geothermalpowerplants",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:26912",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "ccus_wsa",
+      "fullName": "energy_mineral:ccus_wsa",
+      "postgisTable": "energy_mineral.ccus_wsa",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:26912",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "rivers",
+      "fullName": "gen_gis:rivers",
+      "postgisTable": "gen_gis.rivers",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:3857",
+      "apps": ["carbonstorage"]
+    },
+    {
+      "name": "faults_m-179dm",
+      "fullName": "mapping:faults_m-179dm",
+      "postgisTable": "mapping.faults_m-179dm",
+      "minZoom": 5,
+      "maxZoom": 14,
+      "enabled": true,
+      "sourceCrs": "EPSG:26912",
+      "apps": ["carbonstorage"]
     }
   ]
 }
