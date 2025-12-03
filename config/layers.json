@@ -8,7 +8,9 @@
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:3857",
-      "apps": ["geophysics"]
+      "apps": [
+        "geophysics"
+      ]
     },
     {
       "name": "seamlessgeolunits_500k",
@@ -20,7 +22,9 @@
       "sourceCrs": "EPSG:3857",
       "cqlFilter": "scale='small'",
       "outputName": "mapping_seamlessgeolunits_500k",
-      "apps": ["geophysics"]
+      "apps": [
+        "geophysics"
+      ]
     },
     {
       "name": "alluvialfan_current",
@@ -29,7 +33,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "collapsiblesoil_current",
@@ -38,7 +44,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "corrosivesoilrock_current",
@@ -47,7 +55,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "earthfissure_current",
@@ -56,7 +66,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "erosionhazardzone_current",
@@ -65,7 +77,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "expansivesoilrock_current",
@@ -74,7 +88,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "floodanddebrisflow_current",
@@ -83,7 +99,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "groundshaking_current",
@@ -92,7 +110,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "karstfeatures_current",
@@ -101,7 +121,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "landslideinventory_current",
@@ -110,7 +132,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "landslidelegacy_current",
@@ -119,7 +143,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "landslidesusceptibility_current",
@@ -128,7 +154,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "liquefaction_current",
@@ -137,7 +165,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "pipinganderosion_current",
@@ -146,16 +176,22 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "quaternaryfaults_current",
       "fullName": "hazards:quaternaryfaults_current",
       "postgisTable": "hazards.quaternaryfaults_current",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards", "geophysics", "carbonstorage"]
+      "apps": [
+        "hazards",
+        "geophysics",
+        "carbonstorage"
+      ]
     },
     {
       "name": "radonsusceptibility_current",
@@ -164,7 +200,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "rockfall_current",
@@ -173,7 +211,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "rubidium_strontium_current",
@@ -182,7 +222,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "salttectonicsdeformation_current",
@@ -191,7 +233,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "shallowbedrock_current",
@@ -200,7 +244,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "shallowgroundwater_current",
@@ -209,7 +255,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "solublesoilandrock_current",
@@ -218,7 +266,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "studyareas_current",
@@ -227,7 +277,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "surfacefaultrupture_current",
@@ -236,7 +288,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "windblownsand_current",
@@ -245,7 +299,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["hazards"]
+      "apps": [
+        "hazards"
+      ]
     },
     {
       "name": "mart_geophysics_heatflowedwards_source_current",
@@ -254,7 +310,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["geophysics"]
+      "apps": [
+        "geophysics"
+      ]
     },
     {
       "name": "mart_geothermal_qfaults_ingenious_current",
@@ -263,7 +321,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["geophysics"]
+      "apps": [
+        "geophysics"
+      ]
     },
     {
       "name": "mart_geothermal_wellsandsprings_current",
@@ -272,7 +332,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["geophysics"]
+      "apps": [
+        "geophysics"
+      ]
     },
     {
       "name": "wetlandsapp_wetlands_current",
@@ -281,7 +343,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["wetlands"]
+      "apps": [
+        "wetlands"
+      ]
     },
     {
       "name": "wetlandsapp_non_riverine_current",
@@ -290,7 +354,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["wetlands"]
+      "apps": [
+        "wetlands"
+      ]
     },
     {
       "name": "wetlandsapp_riparian_current",
@@ -299,7 +365,9 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["wetlands"]
+      "apps": [
+        "wetlands"
+      ]
     },
     {
       "name": "wetlandsapp_riverine_current",
@@ -308,167 +376,201 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "apps": ["wetlands"]
+      "apps": [
+        "wetlands"
+      ]
     },
     {
       "name": "sco2_draft_13aug24",
       "fullName": "energy_mineral:sco2_draft_13aug24",
       "postgisTable": "energy_mineral.sco2_draft_13aug24",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:4326",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "basin_names",
       "fullName": "energy_mineral:basin_names",
       "postgisTable": "energy_mineral.basin_names",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:3857",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "oilgasfields",
       "fullName": "energy_mineral:oilgasfields",
       "postgisTable": "energy_mineral.oilgasfields",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:3857",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "pipelines",
       "fullName": "energy_mineral:pipelines",
       "postgisTable": "energy_mineral.pipelines",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:3857",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "ccus_co2_sources",
       "fullName": "energy_mineral:ccus_co2_sources",
       "postgisTable": "energy_mineral.ccus_co2_sources",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:26912",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "cores",
       "fullName": "energy_mineral:cores",
       "postgisTable": "energy_mineral.cores",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:26912",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "wellswithtops_hascore",
       "fullName": "energy_mineral:wellswithtops_hascore",
       "postgisTable": "energy_mineral.wellswithtops_hascore",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:26912",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "ccus_sitla_reports",
       "fullName": "energy_mineral:ccus_sitla_reports",
       "postgisTable": "energy_mineral.ccus_sitla_reports",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:26912",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "ccus_noccuszone",
       "fullName": "energy_mineral:ccus_noccuszone",
       "postgisTable": "energy_mineral.ccus_noccuszone",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:26912",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "ccus_majorroads",
       "fullName": "energy_mineral:ccus_majorroads",
       "postgisTable": "energy_mineral.ccus_majorroads",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:3857",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "ccus_railroads",
       "fullName": "energy_mineral:ccus_railroads",
       "postgisTable": "energy_mineral.ccus_railroads",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:26912",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "ccus_transmissionlines",
       "fullName": "energy_mineral:ccus_transmissionlines",
       "postgisTable": "energy_mineral.ccus_transmissionlines",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:26912",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "ccus_geothermalpowerplants",
       "fullName": "energy_mineral:ccus_geothermalpowerplants",
       "postgisTable": "energy_mineral.ccus_geothermalpowerplants",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:26912",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "ccus_wsa",
       "fullName": "energy_mineral:ccus_wsa",
       "postgisTable": "energy_mineral.ccus_wsa",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:26912",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "rivers",
       "fullName": "gen_gis:rivers",
       "postgisTable": "gen_gis.rivers",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:3857",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     },
     {
       "name": "faults_m-179dm",
       "fullName": "mapping:faults_m-179dm",
       "postgisTable": "mapping.faults_m-179dm",
-      "minZoom": 5,
+      "minZoom": 0,
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:26912",
-      "apps": ["carbonstorage"]
+      "apps": [
+        "carbonstorage"
+      ]
     }
   ]
 }

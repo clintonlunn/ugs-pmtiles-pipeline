@@ -30,6 +30,8 @@
   "author": "UGS",
   "license": "MIT",
   "dependencies": {
-    "fast-xml-parser": "^5.3.2"
+    "fast-xml-parser": "^5.3.2",
+    "geostyler-mapbox-parser": "^6.1.1",
+    "geostyler-sld-parser": "^8.2.0"
   }
 }

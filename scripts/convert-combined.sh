@@ -230,7 +230,26 @@ for LAYER_NAME in $LAYERS; do
       # Merge into all styles
       ALL_STYLE_LAYERS=$(echo "$ALL_STYLE_LAYERS" "$LAYER_STYLES" | jq -s '.[0] + .[1]')
       rm -f "$STYLE_TEMP"
-      echo "  Style converted"
+      echo "  Style converted with geostyler-cli"
+    # Fallback to custom SLD parser for complex styles (patterns, gradients, etc.)
+    elif [ -f "$SCRIPT_DIR/sld-to-mapbox.js" ] && node "$SCRIPT_DIR/sld-to-mapbox.js" "$SLD_FILE" "$STYLE_TEMP" "$LAYER_NAME" 2>/dev/null; then
+      echo "  Style converted with sld-to-mapbox.js fallback"
+
+      # Add labels from SLD rule titles
+      node "$SCRIPT_DIR/add-labels-to-style.js" "$SLD_FILE" "$STYLE_TEMP" > "$STYLE_TEMP.labeled" 2>/dev/null || true
+      if [ -s "$STYLE_TEMP.labeled" ]; then
+        mv "$STYLE_TEMP.labeled" "$STYLE_TEMP"
+      fi
+
+      # Extract layers and update source references
+      LAYER_STYLES=$(jq --arg src "$OUTPUT_NAME" --arg srcLayer "$LAYER_NAME" '
+        [.layers[] |
+         . + {source: $src, "source-layer": $srcLayer}]
+      ' "$STYLE_TEMP")
+
+      # Merge into all styles
+      ALL_STYLE_LAYERS=$(echo "$ALL_STYLE_LAYERS" "$LAYER_STYLES" | jq -s '.[0] + .[1]')
+      rm -f "$STYLE_TEMP"
     else
       echo "  Warning: Style conversion failed, using default"
       # Extract UserStyle title from SLD for label (first Title element is UserStyle title)
