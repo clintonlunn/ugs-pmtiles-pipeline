@@ -2,7 +2,7 @@
 set -e
 
 # Usage: ./scripts/convert-combined.sh <output_name> <layer1> <layer2> ...
-# Or:    ./scripts/convert-combined.sh --group hazards
+# Or:    ./scripts/convert-combined.sh --app hazards
 #
 # Combines multiple layers into a single PMTiles file with all styles merged.
 
@@ -13,21 +13,21 @@ OUTPUT_DIR="$PROJECT_ROOT/output"
 TEMP_DIR="$PROJECT_ROOT/temp"
 
 # Parse arguments
-if [ "$1" = "--group" ]; then
-  GROUP_NAME="$2"
-  OUTPUT_NAME="$GROUP_NAME"
+if [ "$1" = "--app" ]; then
+  APP_NAME="$2"
+  OUTPUT_NAME="$APP_NAME"
 
-  # Get all enabled layers for this group from layers.json
-  # Group is determined by the fullName prefix (e.g., "hazards:" for hazards group)
-  LAYERS=$(jq -r ".layers[] | select(.enabled == true) | select(.fullName | startswith(\"${GROUP_NAME}:\")) | .name" "$CONFIG_DIR/layers.json")
+  # Get all enabled layers that have this app in their apps array
+  LAYERS=$(jq -r ".layers[] | select(.enabled == true) | select(.apps[]? == \"${APP_NAME}\") | .name" "$CONFIG_DIR/layers.json")
 
   if [ -z "$LAYERS" ]; then
-    echo "Error: No enabled layers found for group '$GROUP_NAME'"
-    echo "Available groups: hazards, mapping, energy_mineral, wetlands"
+    echo "Error: No enabled layers found for app '$APP_NAME'"
+    echo "Available apps:"
+    jq -r '[.layers[].apps[]?] | unique | .[]' "$CONFIG_DIR/layers.json"
     exit 1
   fi
 
-  echo "=== Converting group: $GROUP_NAME ==="
+  echo "=== Converting app: $APP_NAME ==="
   echo "Layers:"
   echo "$LAYERS" | while read -r layer; do echo "  - $layer"; done
 else

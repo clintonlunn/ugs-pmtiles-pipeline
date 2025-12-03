@@ -7,7 +7,8 @@
       "minZoom": 5,
       "maxZoom": 14,
       "enabled": true,
-      "sourceCrs": "EPSG:3857"
+      "sourceCrs": "EPSG:3857",
+      "apps": ["geophysics"]
     },
     {
       "name": "seamlessgeolunits_500k",
@@ -18,7 +19,8 @@
       "enabled": true,
       "sourceCrs": "EPSG:3857",
       "cqlFilter": "scale='small'",
-      "outputName": "mapping_seamlessgeolunits_500k"
+      "outputName": "mapping_seamlessgeolunits_500k",
+      "apps": ["geophysics"]
     },
     {
       "name": "alluvialfan_current",
@@ -26,7 +28,8 @@
       "postgisTable": "hazards.alluvialfan_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "collapsiblesoil_current",
@@ -34,7 +37,8 @@
       "postgisTable": "hazards.collapsiblesoil_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "corrosivesoilrock_current",
@@ -42,7 +46,8 @@
       "postgisTable": "hazards.corrosivesoilrock_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "earthfissure_current",
@@ -50,7 +55,8 @@
       "postgisTable": "hazards.earthfissure_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "erosionhazardzone_current",
@@ -58,7 +64,8 @@
       "postgisTable": "hazards.erosionhazardzone_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "expansivesoilrock_current",
@@ -66,7 +73,8 @@
       "postgisTable": "hazards.expansivesoilrock_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "floodanddebrisflow_current",
@@ -74,7 +82,8 @@
       "postgisTable": "hazards.floodanddebrisflow_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "groundshaking_current",
@@ -82,7 +91,8 @@
       "postgisTable": "hazards.groundshaking_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "karstfeatures_current",
@@ -90,7 +100,8 @@
       "postgisTable": "hazards.karstfeatures_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "landslideinventory_current",
@@ -98,7 +109,8 @@
       "postgisTable": "hazards.landslideinventory_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "landslidelegacy_current",
@@ -106,7 +118,8 @@
       "postgisTable": "hazards.landslidelegacy_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "landslidesusceptibility_current",
@@ -114,7 +127,8 @@
       "postgisTable": "hazards.landslidesusceptibility_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "liquefaction_current",
@@ -122,7 +136,8 @@
       "postgisTable": "hazards.liquefaction_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "pipinganderosion_current",
@@ -130,7 +145,8 @@
       "postgisTable": "hazards.pipinganderosion_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "quaternaryfaults_current",
@@ -138,7 +154,8 @@
       "postgisTable": "hazards.quaternaryfaults_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards", "geophysics"]
     },
     {
       "name": "radonsusceptibility_current",
@@ -146,7 +163,8 @@
       "postgisTable": "hazards.radonsusceptibility_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "rockfall_current",
@@ -154,7 +172,8 @@
       "postgisTable": "hazards.rockfall_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "rubidium_strontium_current",
@@ -162,7 +181,8 @@
       "postgisTable": "hazards.rubidium_strontium_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "salttectonicsdeformation_current",
@@ -170,7 +190,8 @@
       "postgisTable": "hazards.salttectonicsdeformation_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "shallowbedrock_current",
@@ -178,7 +199,8 @@
       "postgisTable": "hazards.shallowbedrock_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "shallowgroundwater_current",
@@ -186,7 +208,8 @@
       "postgisTable": "hazards.shallowgroundwater_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "solublesoilandrock_current",
@@ -194,7 +217,8 @@
       "postgisTable": "hazards.solublesoilandrock_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "studyareas_current",
@@ -202,7 +226,8 @@
       "postgisTable": "hazards.studyareas_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "surfacefaultrupture_current",
@@ -210,7 +235,8 @@
       "postgisTable": "hazards.surfacefaultrupture_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "windblownsand_current",
@@ -218,7 +244,8 @@
       "postgisTable": "hazards.windblownsand_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["hazards"]
     },
     {
       "name": "mart_geophysics_heatflowedwards_source_current",
@@ -226,7 +253,8 @@
       "postgisTable": "energy_mineral.mart_geophysics_heatflowedwards_source_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["geophysics"]
     },
     {
       "name": "mart_geothermal_qfaults_ingenious_current",
@@ -234,7 +262,8 @@
       "postgisTable": "energy_mineral.mart_geothermal_qfaults_ingenious_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["geophysics"]
     },
     {
       "name": "mart_geothermal_wellsandsprings_current",
@@ -242,7 +271,8 @@
       "postgisTable": "energy_mineral.mart_geothermal_wellsandsprings_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["geophysics"]
     },
     {
       "name": "wetlandsapp_wetlands_current",
@@ -250,7 +280,8 @@
       "postgisTable": "wetlands.wetlandsapp_wetlands_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["wetlands"]
     },
     {
       "name": "wetlandsapp_non_riverine_current",
@@ -258,7 +289,8 @@
       "postgisTable": "wetlands.wetlandsapp_non_riverine_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["wetlands"]
     },
     {
       "name": "wetlandsapp_riparian_current",
@@ -266,7 +298,8 @@
       "postgisTable": "wetlands.wetlandsapp_riparian_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["wetlands"]
     },
     {
       "name": "wetlandsapp_riverine_current",
@@ -274,7 +307,8 @@
       "postgisTable": "wetlands.wetlandsapp_riverine_current",
       "minZoom": 5,
       "maxZoom": 14,
-      "enabled": true
+      "enabled": true,
+      "apps": ["wetlands"]
     }
   ]
 }
