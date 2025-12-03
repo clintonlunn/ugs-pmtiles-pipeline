@@ -23,7 +23,10 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gdal-bin tippecanoe
+          sudo apt-get install -y gdal-bin jq build-essential libsqlite3-dev zlib1g-dev
+          # Install tippecanoe from source (not in default Ubuntu repos)
+          git clone https://github.com/felt/tippecanoe.git
+          cd tippecanoe && make -j && sudo make install && cd ..
           npm install
 
       - name: Authenticate to Google Cloud
@@ -43,7 +46,7 @@ jobs:
           done
 
       - name: Upload to GCS
-        run: ./scripts/upload-to-gcs.sh
+        run: ./scripts/upload-to-gcs.sh --force
 
       - name: Summary
         run: |
