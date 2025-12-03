@@ -3,14 +3,24 @@ set -e
 
 # Usage: ./scripts/convert-combined.sh <output_name> <layer1> <layer2> ...
 # Or:    ./scripts/convert-combined.sh --app hazards
+# Or:    ./scripts/convert-combined.sh --app hazards --styles-only
 #
 # Combines multiple layers into a single PMTiles file with all styles merged.
+# Use --styles-only to regenerate just the style JSON without re-fetching data.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 CONFIG_DIR="$PROJECT_ROOT/config"
 OUTPUT_DIR="$PROJECT_ROOT/output"
 TEMP_DIR="$PROJECT_ROOT/temp"
+
+# Check for --styles-only flag
+STYLES_ONLY=false
+for arg in "$@"; do
+  if [ "$arg" = "--styles-only" ]; then
+    STYLES_ONLY=true
+  fi
+done
 
 # Parse arguments
 if [ "$1" = "--app" ]; then
@@ -27,21 +37,36 @@ if [ "$1" = "--app" ]; then
     exit 1
   fi
 
-  echo "=== Converting app: $APP_NAME ==="
+  if [ "$STYLES_ONLY" = true ]; then
+    echo "=== Regenerating styles only for app: $APP_NAME ==="
+  else
+    echo "=== Converting app: $APP_NAME ==="
+  fi
   echo "Layers:"
   echo "$LAYERS" | while read -r layer; do echo "  - $layer"; done
 else
   OUTPUT_NAME="$1"
   shift
-  LAYERS="$@"
+  # Filter out --styles-only from LAYERS
+  LAYERS=""
+  for arg in "$@"; do
+    if [ "$arg" != "--styles-only" ]; then
+      LAYERS="$LAYERS $arg"
+    fi
+  done
+  LAYERS=$(echo "$LAYERS" | xargs)  # trim whitespace
 
   if [ -z "$OUTPUT_NAME" ] || [ -z "$LAYERS" ]; then
     echo "Usage: $0 <output_name> <layer1> <layer2> ..."
-    echo "   or: $0 --group <group_name>"
+    echo "   or: $0 --app <app_name> [--styles-only]"
+    echo ""
+    echo "Options:"
+    echo "  --styles-only   Only regenerate styles, skip data fetch and PMTiles generation"
     echo ""
     echo "Examples:"
-    echo "  $0 hazards quaternaryfaults_current liquefaction_current surfacefaultrupture_current"
-    echo "  $0 --group hazards"
+    echo "  $0 hazards quaternaryfaults_current liquefaction_current"
+    echo "  $0 --app hazards"
+    echo "  $0 --app hazards --styles-only"
     exit 1
   fi
 
@@ -88,90 +113,93 @@ for LAYER_NAME in $LAYERS; do
 
   GEOJSON_FILE="$TEMP_DIR/${LAYER_NAME}.geojson"
 
-  # Fetch GeoJSON with pagination
-  echo "  Fetching from WFS..."
+  # Skip data fetching if styles-only mode
+  if [ "$STYLES_ONLY" = false ]; then
+    # Fetch GeoJSON with pagination
+    echo "  Fetching from WFS..."
 
-  # Auto-detect sortable field
-  DESCRIBE_URL="${WFS_URL}?service=WFS&version=2.0.0&request=DescribeFeatureType&typeNames=${LAYER_FULL_NAME}&outputFormat=application/json"
-  FIELD_INFO=$(curl -sL "$DESCRIBE_URL")
+    # Auto-detect sortable field
+    DESCRIBE_URL="${WFS_URL}?service=WFS&version=2.0.0&request=DescribeFeatureType&typeNames=${LAYER_FULL_NAME}&outputFormat=application/json"
+    FIELD_INFO=$(curl -sL "$DESCRIBE_URL")
 
-  SORT_BY=""
-  for CANDIDATE in ogc_fid gid fid id objectid; do
-    if echo "$FIELD_INFO" | jq -e ".featureTypes[0].properties[] | select(.name == \"$CANDIDATE\")" > /dev/null 2>&1; then
-      SORT_BY="$CANDIDATE"
-      break
-    fi
-  done
-  if [ -z "$SORT_BY" ]; then
-    SORT_BY=$(echo "$FIELD_INFO" | jq -r '.featureTypes[0].properties[] | select(.localType == "int" or .localType == "long") | .name' | head -1)
-  fi
-  if [ -z "$SORT_BY" ]; then
-    SORT_BY=$(echo "$FIELD_INFO" | jq -r '.featureTypes[0].properties[0].name')
-  fi
-
-  # Pagination
-  PAGE_SIZE=100000
-  START_INDEX=0
-  TOTAL_FEATURES=0
-  PAGE_NUM=1
-  FEATURES_DIR="$TEMP_DIR/${LAYER_NAME}_pages"
-  TEMP_GEOJSON="$TEMP_DIR/${LAYER_NAME}_temp.geojson"
-
-  rm -rf "$FEATURES_DIR" "$TEMP_GEOJSON"
-  mkdir -p "$FEATURES_DIR"
-
-  while true; do
-    PAGE_FILE="$FEATURES_DIR/page_${PAGE_NUM}.json"
-    REQUEST_URL="${WFS_URL}?service=WFS&version=2.0.0&request=GetFeature&typeNames=${LAYER_FULL_NAME}&outputFormat=application/json&count=${PAGE_SIZE}&startIndex=${START_INDEX}&sortBy=${SORT_BY}"
-
-    if [ -n "$CQL_FILTER" ]; then
-      REQUEST_URL="${REQUEST_URL}&CQL_FILTER=${CQL_FILTER}"
-    fi
-
-    if ! curl -sL --max-time 600 -o "$PAGE_FILE" "$REQUEST_URL"; then
-      echo "  Error: Failed to fetch page $PAGE_NUM"
-      exit 1
-    fi
-
-    PAGE_FEATURES=$(jq '.features | length' "$PAGE_FILE" 2>/dev/null || echo "0")
-    TOTAL_FEATURES=$((TOTAL_FEATURES + PAGE_FEATURES))
-
-    if [ "$PAGE_FEATURES" -lt "$PAGE_SIZE" ]; then
-      break
-    fi
-
-    START_INDEX=$((START_INDEX + PAGE_SIZE))
-    PAGE_NUM=$((PAGE_NUM + 1))
-
-    if [ "$TOTAL_FEATURES" -ge 1000000 ]; then
-      echo "  Warning: Reached 1M feature limit"
-      break
-    fi
-  done
-
-  echo "  Fetched $TOTAL_FEATURES features"
-
-  # Merge pages
-  if [ "$PAGE_NUM" -eq 1 ]; then
-    mv "$FEATURES_DIR/page_1.json" "$TEMP_GEOJSON"
-  else
-    echo '{"type":"FeatureCollection","features":[' > "$TEMP_GEOJSON"
-    FIRST=true
-    for PAGE_FILE in "$FEATURES_DIR"/page_*.json; do
-      if [ "$FIRST" = true ]; then FIRST=false; else echo ',' >> "$TEMP_GEOJSON"; fi
-      jq -c '.features[]' "$PAGE_FILE" | paste -sd ',' >> "$TEMP_GEOJSON"
+    SORT_BY=""
+    for CANDIDATE in ogc_fid gid fid id objectid; do
+      if echo "$FIELD_INFO" | jq -e ".featureTypes[0].properties[] | select(.name == \"$CANDIDATE\")" > /dev/null 2>&1; then
+        SORT_BY="$CANDIDATE"
+        break
+      fi
     done
-    echo ']}' >> "$TEMP_GEOJSON"
+    if [ -z "$SORT_BY" ]; then
+      SORT_BY=$(echo "$FIELD_INFO" | jq -r '.featureTypes[0].properties[] | select(.localType == "int" or .localType == "long") | .name' | head -1)
+    fi
+    if [ -z "$SORT_BY" ]; then
+      SORT_BY=$(echo "$FIELD_INFO" | jq -r '.featureTypes[0].properties[0].name')
+    fi
+
+    # Pagination
+    PAGE_SIZE=100000
+    START_INDEX=0
+    TOTAL_FEATURES=0
+    PAGE_NUM=1
+    FEATURES_DIR="$TEMP_DIR/${LAYER_NAME}_pages"
+    TEMP_GEOJSON="$TEMP_DIR/${LAYER_NAME}_temp.geojson"
+
+    rm -rf "$FEATURES_DIR" "$TEMP_GEOJSON"
+    mkdir -p "$FEATURES_DIR"
+
+    while true; do
+      PAGE_FILE="$FEATURES_DIR/page_${PAGE_NUM}.json"
+      REQUEST_URL="${WFS_URL}?service=WFS&version=2.0.0&request=GetFeature&typeNames=${LAYER_FULL_NAME}&outputFormat=application/json&count=${PAGE_SIZE}&startIndex=${START_INDEX}&sortBy=${SORT_BY}"
+
+      if [ -n "$CQL_FILTER" ]; then
+        REQUEST_URL="${REQUEST_URL}&CQL_FILTER=${CQL_FILTER}"
+      fi
+
+      if ! curl -sL --max-time 600 -o "$PAGE_FILE" "$REQUEST_URL"; then
+        echo "  Error: Failed to fetch page $PAGE_NUM"
+        exit 1
+      fi
+
+      PAGE_FEATURES=$(jq '.features | length' "$PAGE_FILE" 2>/dev/null || echo "0")
+      TOTAL_FEATURES=$((TOTAL_FEATURES + PAGE_FEATURES))
+
+      if [ "$PAGE_FEATURES" -lt "$PAGE_SIZE" ]; then
+        break
+      fi
+
+      START_INDEX=$((START_INDEX + PAGE_SIZE))
+      PAGE_NUM=$((PAGE_NUM + 1))
+
+      if [ "$TOTAL_FEATURES" -ge 1000000 ]; then
+        echo "  Warning: Reached 1M feature limit"
+        break
+      fi
+    done
+
+    echo "  Fetched $TOTAL_FEATURES features"
+
+    # Merge pages
+    if [ "$PAGE_NUM" -eq 1 ]; then
+      mv "$FEATURES_DIR/page_1.json" "$TEMP_GEOJSON"
+    else
+      echo '{"type":"FeatureCollection","features":[' > "$TEMP_GEOJSON"
+      FIRST=true
+      for PAGE_FILE in "$FEATURES_DIR"/page_*.json; do
+        if [ "$FIRST" = true ]; then FIRST=false; else echo ',' >> "$TEMP_GEOJSON"; fi
+        jq -c '.features[]' "$PAGE_FILE" | paste -sd ',' >> "$TEMP_GEOJSON"
+      done
+      echo ']}' >> "$TEMP_GEOJSON"
+    fi
+    rm -rf "$FEATURES_DIR"
+
+    # Reproject
+    echo "  Reprojecting from $SOURCE_CRS to EPSG:4326..."
+    ogr2ogr -f GeoJSON "$GEOJSON_FILE" "$TEMP_GEOJSON" -t_srs EPSG:4326 -s_srs "$SOURCE_CRS"
+    rm -f "$TEMP_GEOJSON"
+
+    # Add to tippecanoe inputs
+    TIPPECANOE_INPUTS="$TIPPECANOE_INPUTS -L ${LAYER_NAME}:${GEOJSON_FILE}"
   fi
-  rm -rf "$FEATURES_DIR"
-
-  # Reproject
-  echo "  Reprojecting from $SOURCE_CRS to EPSG:4326..."
-  ogr2ogr -f GeoJSON "$GEOJSON_FILE" "$TEMP_GEOJSON" -t_srs EPSG:4326 -s_srs "$SOURCE_CRS"
-  rm -f "$TEMP_GEOJSON"
-
-  # Add to tippecanoe inputs
-  TIPPECANOE_INPUTS="$TIPPECANOE_INPUTS -L ${LAYER_NAME}:${GEOJSON_FILE}"
 
   # Fetch and convert style
   echo "  Converting style..."
@@ -215,20 +243,24 @@ for LAYER_NAME in $LAYERS; do
   echo ""
 done
 
-# Generate combined PMTiles
-echo "=== Generating combined PMTiles ==="
+# Generate combined PMTiles (skip if styles-only)
 PMTILES_FILE="$OUTPUT_DIR/${OUTPUT_NAME}.pmtiles"
 
-echo "Zoom range: $MIN_ZOOM - $MAX_ZOOM"
-echo "Running tippecanoe..."
+if [ "$STYLES_ONLY" = false ]; then
+  echo "=== Generating combined PMTiles ==="
+  echo "Zoom range: $MIN_ZOOM - $MAX_ZOOM"
+  echo "Running tippecanoe..."
 
-eval tippecanoe -o "$PMTILES_FILE" \
-  -Z"$MIN_ZOOM" \
-  -z"$MAX_ZOOM" \
-  --drop-densest-as-needed \
-  --extend-zooms-if-still-dropping \
-  --force \
-  $TIPPECANOE_INPUTS
+  eval tippecanoe -o "$PMTILES_FILE" \
+    -Z"$MIN_ZOOM" \
+    -z"$MAX_ZOOM" \
+    --drop-densest-as-needed \
+    --extend-zooms-if-still-dropping \
+    --force \
+    $TIPPECANOE_INPUTS
+else
+  echo "=== Skipping PMTiles generation (styles-only mode) ==="
+fi
 
 # Generate combined style JSON
 echo "Generating combined style..."
@@ -246,29 +278,39 @@ jq -n --arg name "$OUTPUT_NAME" --argjson layers "$ALL_STYLE_LAYERS" '{
   layers: $layers
 }' > "$STYLE_FILE"
 
-# Cleanup temp GeoJSON files
-echo "Cleaning up..."
-for LAYER_NAME in $LAYERS; do
-  rm -f "$TEMP_DIR/${LAYER_NAME}.geojson"
-  rm -f "$TEMP_DIR/${LAYER_NAME}_temp.geojson"
-  rm -rf "$TEMP_DIR/${LAYER_NAME}_pages"
-done
+# Cleanup temp GeoJSON files (only if not styles-only)
+if [ "$STYLES_ONLY" = false ]; then
+  echo "Cleaning up..."
+  for LAYER_NAME in $LAYERS; do
+    rm -f "$TEMP_DIR/${LAYER_NAME}.geojson"
+    rm -f "$TEMP_DIR/${LAYER_NAME}_temp.geojson"
+    rm -rf "$TEMP_DIR/${LAYER_NAME}_pages"
+  done
+fi
 
 # Summary
-PMTILES_SIZE=$(du -h "$PMTILES_FILE" | cut -f1)
 LAYER_COUNT=$(echo "$LAYERS" | wc -w | tr -d ' ')
 
 echo ""
-echo "=== Combined conversion complete ==="
-echo "PMTiles: $PMTILES_FILE ($PMTILES_SIZE)"
-echo "Style:   $STYLE_FILE"
-echo "Layers:  $LAYER_COUNT"
-
-# List layers in the PMTiles
-echo ""
-echo "Layers in PMTiles:"
-if command -v pmtiles &> /dev/null; then
-  pmtiles show "$PMTILES_FILE" 2>/dev/null | grep -A 100 "vector_layers" | head -30 || true
+if [ "$STYLES_ONLY" = true ]; then
+  echo "=== Style regeneration complete ==="
+  echo "Style:   $STYLE_FILE"
+  echo "Layers:  $LAYER_COUNT"
+  echo ""
+  echo "Upload with: ./scripts/upload-to-gcs.sh $STYLE_FILE"
 else
-  echo "  (install pmtiles CLI to inspect: go install github.com/protomaps/go-pmtiles/cmd/pmtiles@latest)"
+  PMTILES_SIZE=$(du -h "$PMTILES_FILE" | cut -f1)
+  echo "=== Combined conversion complete ==="
+  echo "PMTiles: $PMTILES_FILE ($PMTILES_SIZE)"
+  echo "Style:   $STYLE_FILE"
+  echo "Layers:  $LAYER_COUNT"
+
+  # List layers in the PMTiles
+  echo ""
+  echo "Layers in PMTiles:"
+  if command -v pmtiles &> /dev/null; then
+    pmtiles show "$PMTILES_FILE" 2>/dev/null | grep -A 100 "vector_layers" | head -30 || true
+  else
+    echo "  (install pmtiles CLI to inspect: go install github.com/protomaps/go-pmtiles/cmd/pmtiles@latest)"
+  fi
 fi
