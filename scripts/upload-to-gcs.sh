@@ -2,7 +2,9 @@
 set -e
 
 # Upload PMTiles and style JSON files to Google Cloud Storage
-# Usage: ./scripts/upload-to-gcs.sh [--dry-run] [--force]
+# Usage: ./scripts/upload-to-gcs.sh [--dry-run] [--force] [file1] [file2] ...
+#        ./scripts/upload-to-gcs.sh output/hazards.json
+#        ./scripts/upload-to-gcs.sh output/hazards.pmtiles output/hazards.json
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
@@ -13,11 +15,20 @@ PUBLIC_URL="https://storage.googleapis.com/ut-dnr-ugs-bucket-server-prod/pmtiles
 
 DRY_RUN=false
 FORCE=false
+FILES_TO_UPLOAD=()
 
 for arg in "$@"; do
   case $arg in
     --dry-run) DRY_RUN=true ;;
     --force) FORCE=true ;;
+    *)
+      # It's a file path
+      if [ -f "$arg" ]; then
+        FILES_TO_UPLOAD+=("$arg")
+      elif [ -f "$OUTPUT_DIR/$(basename "$arg")" ]; then
+        FILES_TO_UPLOAD+=("$OUTPUT_DIR/$(basename "$arg")")
+      fi
+      ;;
   esac
 done
 
@@ -26,24 +37,37 @@ if [ "$DRY_RUN" = true ]; then
 fi
 
 echo "=== Uploading to GCS ==="
-echo "Source: $OUTPUT_DIR"
 echo "Destination: $GCS_BUCKET"
 echo ""
 
-# Check if output directory exists and has files
-if [ ! -d "$OUTPUT_DIR" ]; then
-  echo "Error: Output directory does not exist: $OUTPUT_DIR"
-  exit 1
+# If no specific files provided, find all in output dir
+if [ ${#FILES_TO_UPLOAD[@]} -eq 0 ]; then
+  # Check if output directory exists
+  if [ ! -d "$OUTPUT_DIR" ]; then
+    echo "Error: Output directory does not exist: $OUTPUT_DIR"
+    exit 1
+  fi
+
+  # Get list of local files
+  while IFS= read -r -d '' file; do
+    FILES_TO_UPLOAD+=("$file")
+  done < <(find "$OUTPUT_DIR" -name "*.pmtiles" -print0 2>/dev/null)
+
+  while IFS= read -r -d '' file; do
+    FILES_TO_UPLOAD+=("$file")
+  done < <(find "$OUTPUT_DIR" -name "*.json" -print0 2>/dev/null)
+
+  if [ ${#FILES_TO_UPLOAD[@]} -eq 0 ]; then
+    echo "Error: No PMTiles or JSON files found in $OUTPUT_DIR"
+    exit 1
+  fi
+
+  echo "Source: $OUTPUT_DIR (all files)"
+else
+  echo "Source: ${#FILES_TO_UPLOAD[@]} specified file(s)"
 fi
 
-# Get list of local files
-LOCAL_PMTILES=$(find "$OUTPUT_DIR" -name "*.pmtiles" 2>/dev/null)
-LOCAL_JSON=$(find "$OUTPUT_DIR" -name "*.json" 2>/dev/null)
-
-if [ -z "$LOCAL_PMTILES" ]; then
-  echo "Error: No PMTiles files found in $OUTPUT_DIR"
-  exit 1
-fi
+echo ""
 
 # Get list of remote files
 echo "Checking existing files in GCS..."
@@ -57,7 +81,7 @@ echo "----------------"
 WILL_REPLACE=()
 WILL_ADD=()
 
-for local_file in $LOCAL_PMTILES $LOCAL_JSON; do
+for local_file in "${FILES_TO_UPLOAD[@]}"; do
   BASENAME=$(basename "$local_file")
   LOCAL_SIZE=$(du -h "$local_file" | cut -f1)
   REMOTE_PATH="$GCS_BUCKET/$BASENAME"
@@ -93,15 +117,17 @@ if [ ${#WILL_REPLACE[@]} -gt 0 ] && [ "$FORCE" != true ]; then
   fi
 fi
 
-# Upload with parallel transfers
+# Upload files
 echo "Uploading..."
-gsutil -m cp "$OUTPUT_DIR"/*.pmtiles "$OUTPUT_DIR"/*.json "$GCS_BUCKET/"
+for local_file in "${FILES_TO_UPLOAD[@]}"; do
+  gsutil cp "$local_file" "$GCS_BUCKET/"
+done
 
 echo ""
 echo "=== Upload complete ==="
 echo ""
 echo "Public URLs:"
-for f in $LOCAL_PMTILES; do
-  BASENAME=$(basename "$f")
+for local_file in "${FILES_TO_UPLOAD[@]}"; do
+  BASENAME=$(basename "$local_file")
   echo "  $PUBLIC_URL/$BASENAME"
 done
