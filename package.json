@@ -13,15 +13,23 @@
     "prepare": "husky install || true"
   },
   "devDependencies": {
-    "prettier": "^3.1.0",
     "husky": "^8.0.3",
-    "lint-staged": "^15.1.0"
+    "lint-staged": "^15.1.0",
+    "prettier": "^3.1.0"
   },
   "lint-staged": {
     "*.sh": "shellcheck",
     "*.{json,md}": "prettier --write"
   },
-  "keywords": ["pmtiles", "geoserver", "maplibre", "vector-tiles"],
+  "keywords": [
+    "pmtiles",
+    "geoserver",
+    "maplibre",
+    "vector-tiles"
+  ],
   "author": "UGS",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "fast-xml-parser": "^5.3.2"
+  }
 }

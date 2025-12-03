@@ -216,6 +216,10 @@ for LAYER_NAME in $LAYERS; do
     rm -f "$TEMP_DIR/sld_temp.xml"
 
     if npx geostyler-cli -s sld -t mapbox -o "$STYLE_TEMP" "$SLD_FILE" 2>/dev/null; then
+      # Add labels from SLD rule titles to the converted style (matches by filter, not index)
+      node "$SCRIPT_DIR/add-labels-to-style.js" "$SLD_FILE" "$STYLE_TEMP" > "$STYLE_TEMP.labeled"
+      mv "$STYLE_TEMP.labeled" "$STYLE_TEMP"
+
       # Extract layers and update source references
       LAYER_STYLES=$(jq --arg src "$OUTPUT_NAME" --arg srcLayer "$LAYER_NAME" '
         [.layers[] |
@@ -229,13 +233,26 @@ for LAYER_NAME in $LAYERS; do
       echo "  Style converted"
     else
       echo "  Warning: Style conversion failed, using default"
-      # Add default style for this layer
-      DEFAULT_STYLE="[{\"id\":\"${LAYER_NAME}-fill\",\"source\":\"${OUTPUT_NAME}\",\"source-layer\":\"${LAYER_NAME}\",\"type\":\"fill\",\"paint\":{\"fill-color\":\"#088\",\"fill-opacity\":0.6}},{\"id\":\"${LAYER_NAME}-outline\",\"source\":\"${OUTPUT_NAME}\",\"source-layer\":\"${LAYER_NAME}\",\"type\":\"line\",\"paint\":{\"line-color\":\"#000\",\"line-width\":0.5}}]"
+      # Extract UserStyle title from SLD for label (first Title element is UserStyle title)
+      SLD_TITLE=$(grep -oP '(?<=<sld:Title>)[^<]+' "$SLD_FILE" 2>/dev/null | head -1 | sed 's/&lt;/</g; s/&gt;/>/g; s/&amp;/\&/g; s/_/ /g')
+      if [ -z "$SLD_TITLE" ]; then
+        SLD_TITLE=$(echo "$LAYER_NAME" | sed 's/_current$//' | sed 's/_/ /g' | sed 's/\b\(.\)/\u\1/g')
+      fi
+      # Add default style with label from SLD title
+      DEFAULT_STYLE=$(jq -n --arg name "$LAYER_NAME" --arg src "$OUTPUT_NAME" --arg label "$SLD_TITLE" '[
+        {id: ($name + "-fill"), source: $src, "source-layer": $name, type: "fill", paint: {"fill-color": "#088", "fill-opacity": 0.6}, metadata: {label: $label}},
+        {id: ($name + "-outline"), source: $src, "source-layer": $name, type: "line", paint: {"line-color": "#000", "line-width": 0.5}, metadata: {label: $label}}
+      ]')
       ALL_STYLE_LAYERS=$(echo "$ALL_STYLE_LAYERS" "$DEFAULT_STYLE" | jq -s '.[0] + .[1]')
     fi
   else
     echo "  Warning: No SLD found, using default style"
-    DEFAULT_STYLE="[{\"id\":\"${LAYER_NAME}-fill\",\"source\":\"${OUTPUT_NAME}\",\"source-layer\":\"${LAYER_NAME}\",\"type\":\"fill\",\"paint\":{\"fill-color\":\"#088\",\"fill-opacity\":0.6}},{\"id\":\"${LAYER_NAME}-outline\",\"source\":\"${OUTPUT_NAME}\",\"source-layer\":\"${LAYER_NAME}\",\"type\":\"line\",\"paint\":{\"line-color\":\"#000\",\"line-width\":0.5}}]"
+    # Format layer name as label
+    FORMATTED_NAME=$(echo "$LAYER_NAME" | sed 's/_current$//' | sed 's/_/ /g' | sed 's/\b\(.\)/\u\1/g')
+    DEFAULT_STYLE=$(jq -n --arg name "$LAYER_NAME" --arg src "$OUTPUT_NAME" --arg label "$FORMATTED_NAME" '[
+      {id: ($name + "-fill"), source: $src, "source-layer": $name, type: "fill", paint: {"fill-color": "#088", "fill-opacity": 0.6}, metadata: {label: $label}},
+      {id: ($name + "-outline"), source: $src, "source-layer": $name, type: "line", paint: {"line-color": "#000", "line-width": 0.5}, metadata: {label: $label}}
+    ]')
     ALL_STYLE_LAYERS=$(echo "$ALL_STYLE_LAYERS" "$DEFAULT_STYLE" | jq -s '.[0] + .[1]')
   fi
   rm -f "$SLD_FILE"
