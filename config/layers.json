@@ -189,8 +189,7 @@
       "enabled": true,
       "apps": [
         "hazards",
-        "geophysics",
-        "carbonstorage"
+        "geophysics"
       ]
     },
     {
@@ -568,6 +567,17 @@
       "maxZoom": 14,
       "enabled": true,
       "sourceCrs": "EPSG:26912",
+      "apps": [
+        "carbonstorage"
+      ]
+    },
+    {
+      "name": "quaternaryfaults_ccs",
+      "fullName": "hazards:quaternaryfaults_current",
+      "postgisTable": "hazards.quaternaryfaults_current",
+      "minZoom": 0,
+      "maxZoom": 14,
+      "enabled": true,
       "apps": [
         "carbonstorage"
       ]

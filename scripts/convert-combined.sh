@@ -290,8 +290,9 @@ if [ "$STYLES_ONLY" = false ]; then
   eval tippecanoe -o "$PMTILES_FILE" \
     -Z"$MIN_ZOOM" \
     -z"$MAX_ZOOM" \
-    --drop-densest-as-needed \
-    --extend-zooms-if-still-dropping \
+    -r1 \
+    --no-feature-limit \
+    --no-tile-size-limit \
     --force \
     $TIPPECANOE_INPUTS
 else
