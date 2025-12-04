@@ -76,6 +76,10 @@ function fallbackConvert(sldContent, layerName) {
       continue;
     }
 
+    // Check for legend-only rules (MaxScaleDenominator <= 1 means never render on map)
+    const maxScaleMatch = ruleContent.match(/<sld:MaxScaleDenominator>([^<]+)<\/sld:MaxScaleDenominator>/);
+    const isLegendOnly = maxScaleMatch && parseFloat(maxScaleMatch[1]) <= 10;
+
     // Extract label
     const titleMatch = ruleContent.match(/<sld:Title>([^<]+)<\/sld:Title>/) ||
                        ruleContent.match(/<sld:Name>([^<]+)<\/sld:Name>/);
@@ -128,7 +132,8 @@ function fallbackConvert(sldContent, layerName) {
         value: propMatch ? propMatch[2] : null,
         rangeFilters,
         circleRadius,
-        isPoint
+        isPoint,
+        isLegendOnly
       });
     }
   }
@@ -154,9 +159,16 @@ function fallbackConvert(sldContent, layerName) {
   // Build layers from rules
   const layers = [];
 
+  // Collect legend-only items for metadata
+  const legendOnlyItems = rules.filter(r => r.isLegendOnly).map(r => ({
+    label: r.label,
+    color: r.color
+  }));
+
   if (isPoint) {
-    // Point/circle layers
-    rules.forEach((rule, i) => {
+    // Point/circle layers - skip legend-only rules
+    const renderableRules = rules.filter(r => !r.isLegendOnly);
+    renderableRules.forEach((rule, i) => {
       const layer = {
         id: `${layerName}-circle-${i}`,
         source: layerName,
@@ -176,7 +188,7 @@ function fallbackConvert(sldContent, layerName) {
       }
 
       if (rule.label) {
-        layer.metadata = { label: rule.label };
+        layer.metadata = { label: rule.label, legendOnlyItems };
       }
 
       layers.push(layer);
