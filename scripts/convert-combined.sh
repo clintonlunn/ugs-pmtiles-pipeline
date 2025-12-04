@@ -220,7 +220,7 @@ for LAYER_NAME in $LAYERS; do
     if npx geostyler-cli -s sld -t mapbox -o "$STYLE_TEMP" "$SLD_FILE" 2>/dev/null; then
       # Check for bad output: null values in paint properties indicate geostyler couldn't handle it
       # Common issues: null circle-radius (Interpolate functions), null fill-color (patterns)
-      HAS_BAD_OUTPUT=$(jq '[.layers[].paint | values] | flatten | map(select(. == null)) | length > 0' "$STYLE_TEMP" 2>/dev/null || echo "true")
+      HAS_BAD_OUTPUT=$(jq '[.layers[].paint | to_entries[] | .value] | map(select(. == null)) | length > 0' "$STYLE_TEMP" 2>/dev/null || echo "true")
 
       if [ "$HAS_BAD_OUTPUT" = "true" ] && [ -f "$SCRIPT_DIR/sld-to-mapbox.js" ]; then
         echo "  geostyler-cli produced incomplete output, trying fallback..."
