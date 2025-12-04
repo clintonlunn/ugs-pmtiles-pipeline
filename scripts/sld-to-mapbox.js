@@ -116,10 +116,27 @@ function fallbackConvert(sldContent, layerName) {
       const literals = [...funcContent.matchAll(/<ogc:Literal>([^<]+)<\/ogc:Literal>/g)].map(m => parseFloat(m[1]));
 
       if (propName && literals.length >= 4) {
+        // Create zoom-aware circle radius that scales down when zoomed out
+        // At low zoom: small fixed size; at high zoom: data-driven size
+        const minVal = literals[0];
+        const minSize = literals[1];
+        const maxVal = literals[2];
+        const maxSize = literals[3];
+
         circleRadius = [
-          'interpolate', ['linear'], ['get', propName[1]],
-          literals[0], literals[1],
-          literals[2], literals[3]
+          'interpolate', ['linear'], ['zoom'],
+          0, 2,   // At zoom 0, tiny circles
+          5, 4,   // At zoom 5, small circles
+          8, [    // At zoom 8+, start using data-driven sizing
+            'interpolate', ['linear'], ['get', propName[1]],
+            minVal, minSize * 0.5,
+            maxVal, maxSize * 0.5
+          ],
+          12, [   // At zoom 12+, full data-driven sizing
+            'interpolate', ['linear'], ['get', propName[1]],
+            minVal, minSize,
+            maxVal, maxSize
+          ]
         ];
       }
     }
