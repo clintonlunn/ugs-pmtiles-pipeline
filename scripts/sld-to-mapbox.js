@@ -6,6 +6,90 @@
 
 const fs = require('fs');
 
+/**
+ * Fix invalid MapLibre style output from geostyler
+ * - Remove duplicate branch labels in match expressions
+ * - Replace "||" with "any" in filters
+ */
+function fixStyleOutput(style) {
+  if (!style || !style.layers) return style;
+
+  for (const layer of style.layers) {
+    // Fix paint properties with match expressions
+    if (layer.paint) {
+      for (const [key, value] of Object.entries(layer.paint)) {
+        if (Array.isArray(value) && value[0] === 'match') {
+          layer.paint[key] = deduplicateMatchExpression(value);
+        }
+      }
+    }
+
+    // Fix filters with || operator
+    if (layer.filter) {
+      layer.filter = fixFilterExpression(layer.filter);
+    }
+  }
+
+  return style;
+}
+
+/**
+ * Remove duplicate branch labels from a match expression
+ * ["match", ["get", "prop"], "val1", "#color1", "val1", "#color1", "default"]
+ * becomes ["match", ["get", "prop"], "val1", "#color1", "default"]
+ */
+function deduplicateMatchExpression(expr) {
+  if (!Array.isArray(expr) || expr[0] !== 'match') return expr;
+
+  const [op, getter, ...rest] = expr;
+  const defaultValue = rest.pop(); // Last item is default
+  const seen = new Map();
+
+  // Process label/value pairs
+  for (let i = 0; i < rest.length; i += 2) {
+    const label = rest[i];
+    const value = rest[i + 1];
+    if (!seen.has(label)) {
+      seen.set(label, value);
+    }
+  }
+
+  // Rebuild expression
+  const result = [op, getter];
+  for (const [label, value] of seen) {
+    result.push(label, value);
+  }
+  result.push(defaultValue);
+
+  return result;
+}
+
+/**
+ * Replace "||" with "any" in filter expressions (recursively)
+ */
+function fixFilterExpression(filter) {
+  if (!Array.isArray(filter)) return filter;
+
+  const op = filter[0];
+
+  // Replace || with any
+  if (op === '||') {
+    return ['any', ...filter.slice(1).map(fixFilterExpression)];
+  }
+
+  // Replace && with all
+  if (op === '&&') {
+    return ['all', ...filter.slice(1).map(fixFilterExpression)];
+  }
+
+  // Recursively fix nested expressions
+  if (op === 'any' || op === 'all' || op === 'none') {
+    return [op, ...filter.slice(1).map(fixFilterExpression)];
+  }
+
+  return filter;
+}
+
 async function convertSldToMapbox(sldContent, layerName) {
   // Dynamic import for ESM modules
   const { default: SldStyleParser } = await import('geostyler-sld-parser');
@@ -36,8 +120,11 @@ async function convertSldToMapbox(sldContent, layerName) {
     throw new Error('Failed to convert to Mapbox style');
   }
 
+  // Fix invalid output from geostyler (duplicate labels, || operators)
+  const fixedStyle = fixStyleOutput(mapboxStyle);
+
   // Add source and source-layer to each layer
-  const layers = mapboxStyle.layers.map(layer => ({
+  const layers = fixedStyle.layers.map(layer => ({
     ...layer,
     source: layerName,
     'source-layer': layerName
