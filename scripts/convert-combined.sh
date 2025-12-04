@@ -215,43 +215,60 @@ for LAYER_NAME in $LAYERS; do
     perl -0777 -pe 's/<sld:Rule>.*?<sld:Mark\/>.*?<\/sld:Rule>//gs' "$TEMP_DIR/sld_temp.xml" > "$SLD_FILE"
     rm -f "$TEMP_DIR/sld_temp.xml"
 
+    USED_FALLBACK=false
+
     if npx geostyler-cli -s sld -t mapbox -o "$STYLE_TEMP" "$SLD_FILE" 2>/dev/null; then
-      # Add labels from SLD rule titles to the converted style (matches by filter, not index)
-      node "$SCRIPT_DIR/add-labels-to-style.js" "$SLD_FILE" "$STYLE_TEMP" > "$STYLE_TEMP.labeled"
-      mv "$STYLE_TEMP.labeled" "$STYLE_TEMP"
+      # Check for bad output: null values in paint properties indicate geostyler couldn't handle it
+      # Common issues: null circle-radius (Interpolate functions), null fill-color (patterns)
+      HAS_BAD_OUTPUT=$(jq '[.layers[].paint | values] | flatten | map(select(. == null)) | length > 0' "$STYLE_TEMP" 2>/dev/null || echo "true")
 
-      # Extract layers and update source references
-      LAYER_STYLES=$(jq --arg src "$OUTPUT_NAME" --arg srcLayer "$LAYER_NAME" '
-        [.layers[] |
-         select(.type != "fill" or .paint["fill-color"] != null) |
-         . + {source: $src, "source-layer": $srcLayer}]
-      ' "$STYLE_TEMP")
-
-      # Merge into all styles
-      ALL_STYLE_LAYERS=$(echo "$ALL_STYLE_LAYERS" "$LAYER_STYLES" | jq -s '.[0] + .[1]')
-      rm -f "$STYLE_TEMP"
-      echo "  Style converted with geostyler-cli"
-    # Fallback to custom SLD parser for complex styles (patterns, gradients, etc.)
-    elif [ -f "$SCRIPT_DIR/sld-to-mapbox.js" ] && node "$SCRIPT_DIR/sld-to-mapbox.js" "$SLD_FILE" "$STYLE_TEMP" "$LAYER_NAME" 2>/dev/null; then
-      echo "  Style converted with sld-to-mapbox.js fallback"
-
-      # Add labels from SLD rule titles
-      node "$SCRIPT_DIR/add-labels-to-style.js" "$SLD_FILE" "$STYLE_TEMP" > "$STYLE_TEMP.labeled" 2>/dev/null || true
-      if [ -s "$STYLE_TEMP.labeled" ]; then
+      if [ "$HAS_BAD_OUTPUT" = "true" ] && [ -f "$SCRIPT_DIR/sld-to-mapbox.js" ]; then
+        echo "  geostyler-cli produced incomplete output, trying fallback..."
+        rm -f "$STYLE_TEMP"
+        USED_FALLBACK=true
+      else
+        # Add labels from SLD rule titles to the converted style (matches by filter, not index)
+        node "$SCRIPT_DIR/add-labels-to-style.js" "$SLD_FILE" "$STYLE_TEMP" > "$STYLE_TEMP.labeled"
         mv "$STYLE_TEMP.labeled" "$STYLE_TEMP"
+
+        # Extract layers and update source references
+        LAYER_STYLES=$(jq --arg src "$OUTPUT_NAME" --arg srcLayer "$LAYER_NAME" '
+          [.layers[] |
+           select(.type != "fill" or .paint["fill-color"] != null) |
+           . + {source: $src, "source-layer": $srcLayer}]
+        ' "$STYLE_TEMP")
+
+        # Merge into all styles
+        ALL_STYLE_LAYERS=$(echo "$ALL_STYLE_LAYERS" "$LAYER_STYLES" | jq -s '.[0] + .[1]')
+        rm -f "$STYLE_TEMP"
+        echo "  Style converted with geostyler-cli"
       fi
-
-      # Extract layers and update source references
-      LAYER_STYLES=$(jq --arg src "$OUTPUT_NAME" --arg srcLayer "$LAYER_NAME" '
-        [.layers[] |
-         . + {source: $src, "source-layer": $srcLayer}]
-      ' "$STYLE_TEMP")
-
-      # Merge into all styles
-      ALL_STYLE_LAYERS=$(echo "$ALL_STYLE_LAYERS" "$LAYER_STYLES" | jq -s '.[0] + .[1]')
-      rm -f "$STYLE_TEMP"
     else
-      echo "  Warning: Style conversion failed, using default"
+      USED_FALLBACK=true
+    fi
+
+    # Fallback to custom SLD parser for complex styles (patterns, gradients, Interpolate functions, etc.)
+    if [ "$USED_FALLBACK" = "true" ]; then
+      if [ -f "$SCRIPT_DIR/sld-to-mapbox.js" ] && node "$SCRIPT_DIR/sld-to-mapbox.js" "$SLD_FILE" "$STYLE_TEMP" "$LAYER_NAME" 2>/dev/null; then
+        echo "  Style converted with sld-to-mapbox.js fallback"
+
+        # Add labels from SLD rule titles
+        node "$SCRIPT_DIR/add-labels-to-style.js" "$SLD_FILE" "$STYLE_TEMP" > "$STYLE_TEMP.labeled" 2>/dev/null || true
+        if [ -s "$STYLE_TEMP.labeled" ]; then
+          mv "$STYLE_TEMP.labeled" "$STYLE_TEMP"
+        fi
+
+        # Extract layers and update source references
+        LAYER_STYLES=$(jq --arg src "$OUTPUT_NAME" --arg srcLayer "$LAYER_NAME" '
+          [.layers[] |
+           . + {source: $src, "source-layer": $srcLayer}]
+        ' "$STYLE_TEMP")
+
+        # Merge into all styles
+        ALL_STYLE_LAYERS=$(echo "$ALL_STYLE_LAYERS" "$LAYER_STYLES" | jq -s '.[0] + .[1]')
+        rm -f "$STYLE_TEMP"
+      else
+        echo "  Warning: Style conversion failed, using default"
       # Extract UserStyle title from SLD for label (first Title element is UserStyle title)
       SLD_TITLE=$(grep -oP '(?<=<sld:Title>)[^<]+' "$SLD_FILE" 2>/dev/null | head -1 | sed 's/&lt;/</g; s/&gt;/>/g; s/&amp;/\&/g; s/_/ /g')
       if [ -z "$SLD_TITLE" ]; then
@@ -263,6 +280,7 @@ for LAYER_NAME in $LAYERS; do
         {id: ($name + "-outline"), source: $src, "source-layer": $name, type: "line", paint: {"line-color": "#000", "line-width": 0.5}, metadata: {label: $label}}
       ]')
       ALL_STYLE_LAYERS=$(echo "$ALL_STYLE_LAYERS" "$DEFAULT_STYLE" | jq -s '.[0] + .[1]')
+      fi
     fi
   else
     echo "  Warning: No SLD found, using default style"
