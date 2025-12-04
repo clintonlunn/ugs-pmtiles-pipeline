@@ -311,6 +311,7 @@ if [ "$STYLES_ONLY" = false ]; then
     -r1 \
     --no-feature-limit \
     --no-tile-size-limit \
+    --no-point-reduction \
     --force \
     $TIPPECANOE_INPUTS
 else
